@@ -3,137 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minhas Finanças</title>
+    <title>Dashboard Financeiro Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --verde: #2ecc71; --vermelho: #e74c3c; --azul: #3498db;
-            --bg: #f0f2f5; --card-bg: #ffffff; --texto: #333;
+            --primary: #4f46e5; --success: #10b981; --danger: #ef4444;
+            --warning: #f59e0b; --bg: #f1f5f9; --card: #ffffff; --text: #1e293b;
         }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--texto); margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; }
-        
+
+        body { 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+            background: var(--bg); color: var(--text); margin: 0; padding: 0;
+        }
+
+        /* Layout Principal */
+        .wrapper { max-width: 1400px; margin: 0 auto; padding: 40px 20px; }
+
+        header { margin-bottom: 40px; display: flex; justify-content: space-between; align-items: center; }
+        h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.025em; margin: 0; }
+
         /* Cards de Resumo */
-        .resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .card { padding: 20px; border-radius: 12px; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .receitas { background: var(--verde); }
-        .despesas { background: var(--vermelho); }
-        .saldo { background: var(--azul); }
-        .card h3 { margin: 0; font-size: 0.9rem; opacity: 0.9; }
-        .card p { margin: 10px 0 0; font-size: 1.5rem; font-weight: bold; }
-
-        /* Formulário */
-        .form-section { background: var(--card-bg); padding: 20px; border-radius: 12px; margin-bottom: 25px; }
-        .grid-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: var(--verde); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
-
-        /* Lista */
-        .lista { background: var(--card-bg); border-radius: 12px; padding: 10px; }
-        .item { display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid #eee; align-items: center; }
-        .tag { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-left: 5px; }
-        .tag-fixa { background: #ffebeb; color: #e74c3c; }
-        .tag-variavel { background: #fff4e6; color: #d35400; }
-        .tag-receita { background: #e8f5e9; color: #2ecc71; }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h1>💰 Finanças</h1>
-        <button onclick="limparDados()" style="width: auto; background: #95a5a6; padding: 5px 10px; font-size: 0.8rem;">Limpar Tudo</button>
-    </header>
-
-    <div class="resumo">
-        <div class="card receitas"><h3>Receitas</h3><p id="totalReceitas">R$ 0,00</p></div>
-        <div class="card despesas"><h3>Despesas</h3><p id="totalDespesas">R$ 0,00</p></div>
-        <div class="card saldo"><h3>Saldo</h3><p id="totalSaldo">R$ 0,00</p></div>
-    </div>
-
-    <div class="form-section">
-        <div class="grid-inputs">
-            <input type="text" id="desc" placeholder="Ex: Salário, Aluguel...">
-            <input type="number" id="valor" placeholder="Valor R$">
-            <input type="date" id="data">
-            <select id="tipo">
-                <option value="receita">Receita</option>
-                <option value="fixa">Despesa Fixa</option>
-                <option value="variavel">Despesa Variável</option>
-            </select>
-        </div>
-        <button onclick="adicionar()">Adicionar Transação</button>
-    </div>
-
-    <div class="lista" id="listaTransacoes">
-        </div>
-</div>
-
-<script>
-    let transacoes = JSON.parse(localStorage.getItem('minhas_financas')) || [];
-
-    function adicionar() {
-        const desc = document.getElementById('desc').value;
-        const valor = parseFloat(document.getElementById('valor').value);
-        const tipo = document.getElementById('tipo').value;
-        const data = document.getElementById('data').value;
-
-        if (!desc || !valor || !data) return alert("Preencha tudo!");
-
-        transacoes.unshift({ desc, valor, tipo, data });
-        salvar();
-        atualizarTela();
-        
-        // Limpa campos
-        document.getElementById('desc').value = '';
-        document.getElementById('valor').value = '';
-    }
-
-    function salvar() {
-        localStorage.setItem('minhas_financas', JSON.stringify(transacoes));
-    }
-
-    function limparDados() {
-        if(confirm("Apagar tudo?")) {
-            transacoes = [];
-            salvar();
-            atualizarTela();
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+            gap: 24px; margin-bottom: 40px; 
         }
-    }
+        .stat-card { 
+            background: var(--card); padding: 24px; border-radius: 16px; 
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0;
+        }
+        .stat-label { font-size: 0.875rem; font-weight: 600; color: #64748b; text-transform: uppercase; }
+        .stat-value { font-size: 2rem; font-weight: 700; margin-top: 8px; display: block; }
 
-    function atualizarTela() {
-        const lista = document.getElementById('listaTransacoes');
-        lista.innerHTML = '';
-        
-        let rec = 0, des = 0;
-
-        transacoes.forEach((t, index) => {
-            if (t.tipo === 'receita') rec += t.valor;
-            else des += t.valor;
-
-            const classeTag = t.tipo === 'fixa' ? 'tag-fixa' : (t.tipo === 'variavel' ? 'tag-variavel' : 'tag-receita');
-            const sinal = t.tipo === 'receita' ? '' : '-';
-            const corValor = t.tipo === 'receita' ? 'var(--verde)' : 'var(--vermelho)';
-
-            lista.innerHTML += `
-                <div class="item">
-                    <div>
-                        <strong>${t.desc}</strong> <span class="tag ${classeTag}">${t.tipo}</span>
-                        <div style="font-size: 0.8rem; color: #888;">${t.data}</div>
-                    </div>
-                    <div style="font-weight: bold; color: ${corValor}">
-                        ${sinal} R$ ${t.valor.toFixed(2)}
-                    </div>
-                </div>
-            `;
-        });
-
-        document.getElementById('totalReceitas').innerText = `R$ ${rec.toFixed(2)}`;
-        document.getElementById('totalDespesas').innerText = `R$ ${des.toFixed(2)}`;
-        document.getElementById('totalSaldo').innerText = `R$ ${(rec - des).toFixed(2)}`;
-    }
-
-    atualizarTela();
-</script>
-
-</body>
-</html>
+        /* Formulário Horizontal */
+        .glass-panel { 
+            background: #1e293b; padding: 30px; border-radius: 20px; color: white; 
+            margin-bottom: 40px; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+        }
+        .form-grid { 
+            display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 15px; align-items: flex-end; 
+        }
+        .input-group label { display: block; font-size: 0.75rem; margin-bottom: 8px; font-weight: 500; color: #94a3b8; }
+        input, select { 
+            width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #334155; 
+            background: #334155; color: white; font-size: 1rem
